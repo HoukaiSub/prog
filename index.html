@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Cadastro de Pessoas</title>
+  <script src="scripts.js"></script>
+</head>
+<body>
+  <form id="cadastroForm">
+    <label for="nome">Nome:</label>
+    <input type="text" id="nome" name="nome" required><br><br>
+
+    <label>Gênero:</label>
+    <input type="radio" id="Masc" name="genero" value="Masculino">
+    <label for="generoM">Masculino</label>
+    <input type="radio" id="Fem" name="genero" value="Feminino">
+    <label for="generoF">Feminino</label><br><br>
+
+    <label for="idade">Idade:</label>
+    <input type="number" id="idade" name="idade" required><br><br>
+
+    <label for="uf">Estado:</label>
+    <select id="uf" name="uf" required>
+      <option value="">Selecione o estado</option>
+    </select><br><br>
+
+    <label for="cidade">Cidade:</label>
+    <select id="cidade" name="cidade" required>
+      <option value="">Selecione a cidade</option>
+    </select><br><br>
+
+    <label for="telefone">Telefone:</label>
+    <input type="tel" id="telefone" name="telefone" required><br><br>
+
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" required><br><br>
+
+    <button type="submit">Salvar</button>
+  </form>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('cadastroForm');
+        const ufSelect = document.getElementById('uf');
+        const cidadeSelect = document.getElementById('cidade');
+        const tabelaTemporaria = [];
+
+        function estados() {
+            fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados')
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(uf => {
+                const option = document.createElement('option');
+                option.value = uf.sigla;
+                option.textContent = uf.sigla;
+                ufSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Erro ao carregar os estados:', error));
+        }
+
+        function cidades(uf) {
+            fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${uf}/municipios`)
+            .then(response => response.json())
+            .then(data => {
+                cidadeSelect.innerHTML = '<option value="">Selecione a cidade</option>';
+                data.forEach(cidade => {
+                const option = document.createElement('option');
+                option.value = cidade.nome;
+                option.textContent = cidade.nome;
+                cidadeSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Erro ao carregar cidades:', error));
+        }
+
+        form.addEventListener('submit', event => {
+            event.preventDefault();
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            console.log('Cadastro a ser salvo:', data);
+
+            tabelaTemporaria.push(data);
+
+            form.reset();
+        });
+
+        estados();
+
+        ufSelect.addEventListener('change', event => {
+            const ufSelecionada = event.target.value;
+            if (ufSelecionada) {
+            cidades(ufSelecionada);
+            }
+        });
+    });
+  </script>
+</body>
+</html>
